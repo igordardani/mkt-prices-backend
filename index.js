@@ -38,7 +38,7 @@ app.post('/parse-nfe', async (req, res) => {
 
       // Cabeçalho
       const mercado = getText('#u20') || getText('.txtTopo') || getText('#NomeEmit') || ''
-      const cnpj = getText('#u21') || getText('#CNPJEmit') || ''
+      const cnpj = getText('#u21') || getText('#CNPJEmit') || getText('div:contains("CNPJ")') || document.body.innerText.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)?.[0] || ''
       const endereco = getText('#u22') || getText('#EndEmit') || ''
       const cidade = getText('.Cidade') || ''
       const estado = getText('.UF') || ''
