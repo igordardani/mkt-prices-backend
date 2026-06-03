@@ -1,0 +1,520 @@
+<!DOCTYPE html><html lang="pt-br" dir="ltr" class="ui-mobile"><head id="Head"><base href="https://www.nfce.fazenda.sp.gov.br/NFCeConsultaPublica/Paginas/ConsultaQRCode.aspx?p=35260576430438009713650060000227831006188351|2|1|1|98D5969250A17E236A08B73D5F9231661746E5EE"><title>
+    
+    DOCUMENTO AUXILIAR DA NOTA FISCAL DE CONSUMIDOR ELETRÔNICA
+    
+    
+  </title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=9, IE=edge"><meta name="format-detection" content="telephone=no">
+    <script src="../Xsl/nfce_rj_v2.05/js/jquery.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $('body').hide();
+            $('.ui-filterable input').placeholder();
+            ExibirImagemCancelada();
+            ExibirImagemDenegada();
+            setTimeout(AjustarExibicaoEPEC, 200);
+            setTimeout(function () {
+                $('body').show()
+            }, 400);
+        });
+
+        $(window).resize(function () {
+            setTimeout(AjustarExibicaoEPEC, 300);
+            $('body').hide();
+            setTimeout(function () {
+                $('body').show()
+            }, 400);
+        });
+    </script>
+
+    <script src="../Xsl/nfce_rj_v2.05/js/index.js"></script>
+    <script src="../Xsl/nfce_rj_v2.05/js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="../Xsl/nfce_rj_v1.00/js/jquery.placeholder.min.js"></script>
+    <link rel="stylesheet" media="all" href="../Xsl/nfce_rj_v2.05/css/jquery.mobile-1.4.5.min.css" type="text/css"><link rel="stylesheet" media="all" href="../Xsl/nfce_rj_v2.05/css/nfceMob.css" type="text/css"><link rel="stylesheet" media="all" href="../Xsl/nfce_rj_v2.05/css/nfceMob_ie.css" type="text/css"><link rel="stylesheet" media="all" href="../Content/botoes.css" type="text/css">
+    <style>
+        .msgErro {
+            font-size: 80%;
+            font-weight: bold;
+            color: Red;
+        }
+
+        .BotoesResponsivos input:first-child {
+            margin-left: 2px;
+        }
+
+        #erro {
+            margin-top:250px;
+        }
+
+        @media print {
+            .naoImprimir {
+                display: none;
+                visibility: hidden;
+            }
+            #erro {
+                max-height:none !important;
+            }
+            body {
+                height:99% !important;
+            }
+        }
+    </style>
+</head>
+<body style="display: block;">
+    <form method="post" action="ConsultaResponsiva/ConsultaResumidaRJFrame_v400.aspx" id="ctl00">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="ExVMI8TawS7a/o+UvMHH8drvyPTQxH3gnbXHXVj6t0tpTQ/qMg4h1y5M6wqMq26+uQInvsJJo3/jL7Tk8kSK8bz72mJig3IiJi0Z4H2o2e9aNsDIFGi0GS58CuedTLVsfFm4MQm93mfrtUBWIp/zyncUbe/CT0TtCVA9kZ25jN121OOTsT3znRHFSwk7UUcAOrIXqJKv3OMdLYkIxQ6xPKWuktsMv6SgNeD89kVrjlU=">
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['ctl00'];
+if (!theForm) {
+    theForm = document.ctl00;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+        <div style="width: 100%; max-width: 510px; margin: 10px auto;" class="ui-mobile-viewport ui-overlay-a">
+            
+            
+            
+            <div data-role="page" style="position: relative; min-height: 600px;" data-url="/NFCeConsultaPublica/Paginas/ConsultaQRCode.aspx?p=35260576430438009713650060000227831006188351|2|1|1|98D5969250A17E236A08B73D5F9231661746E5EE" tabindex="0" class="ui-page ui-page-theme-a ui-page-active">
+                <div data-role="header" xmlns:n="http://www.portalfiscal.inf.br/nfe" xmlns:chave="http://exslt.org/chaveacesso" xmlns:r="http://www.serpro.gov.br/nfe/remessanfe.xsd" role="banner" class="ui-header ui-bar-inherit">
+  <h1 class="tit ui-title" role="heading" aria-level="1">
+    <img src="../Xsl/nfce_rj_v2.05/imagens/logoNFCe.png" width="90" height="64" alt="NFC-e">
+    <p>DOCUMENTO AUXILIAR DA NOTA FISCAL DE CONSUMIDOR ELETRÔNICA</p>
+    <p>
+    </p>
+  </h1>
+</div>
+<div data-role="content" xmlns:n="http://www.portalfiscal.inf.br/nfe" xmlns:chave="http://exslt.org/chaveacesso" xmlns:r="http://www.serpro.gov.br/nfe/remessanfe.xsd" class="ui-content" role="main">
+  <div id="conteudo">
+    <div id="avisos">
+    </div>
+    <div class="txtCenter">
+      <div id="u20" class="txtTopo">IRMAOS MUFFATO E CIA LTDA</div>
+      <div class="text">
+								CNPJ:
+								76.430.438/0097-13</div>
+      <div class="text">AVENIDA SAO DOMINGOS
+							,
+							1491
+							,
+							
+							,
+							Vila Guzzo
+							,
+							Catanduva
+							,
+							SP</div>
+    </div>
+    <form class="ui-filterable"><div class="ui-input-search ui-body-inherit ui-corner-all ui-shadow-inset ui-input-has-clear"><input data-type="search" placeholder="Filtrar itens..."><a href="#" tabindex="-1" aria-hidden="true" class="ui-input-clear ui-btn ui-icon-delete ui-btn-icon-notext ui-corner-all ui-input-clear-hidden" title="Clear text">Clear text</a></div></form><table border="0" align="center" cellpadding="0" cellspacing="0" id="tabResult" data-filter="true">
+      <tbody><tr id="Item + 1">
+        <td valign="top">
+          <span class="txtTit">CENOURA KG</span>
+          <span class="RCod">
+										(Código:
+										3408
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>0,805</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										8,993789</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">7,24</span></td>
+      </tr>
+      <tr id="Item + 2">
+        <td valign="top">
+          <span class="txtTit">CEBOLA KG</span>
+          <span class="RCod">
+										(Código:
+										3355
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>0,81</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										4,975309</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">4,03</span></td>
+      </tr>
+      <tr id="Item + 3">
+        <td valign="top">
+          <span class="txtTit">PIMENTAO AMARELO KG</span>
+          <span class="RCod">
+										(Código:
+										3364
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>0,375</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										20</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">7,50</span></td>
+      </tr>
+      <tr id="Item + 4">
+        <td valign="top">
+          <span class="txtTit">BANANA MACA KG</span>
+          <span class="RCod">
+										(Código:
+										836
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>0,955</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										12,994764</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">12,41</span></td>
+      </tr>
+      <tr id="Item + 5">
+        <td valign="top">
+          <span class="txtTit">PIMENTAO VERMELHO KG</span>
+          <span class="RCod">
+										(Código:
+										3372
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>0,35</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										20</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">7,00</span></td>
+      </tr>
+      <tr id="Item + 6">
+        <td valign="top">
+          <span class="txtTit">VINHO CAMPO TI 750ML</span>
+          <span class="RCod">
+										(Código:
+										109016
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>1</span>
+          <span class="RUN">
+            <strong>UN: </strong>Un</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										13,99</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">13,99</span></td>
+      </tr>
+      <tr id="Item + 7">
+        <td valign="top">
+          <span class="txtTit">VINHO COUNTR B 750ML</span>
+          <span class="RCod">
+										(Código:
+										11945
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>1</span>
+          <span class="RUN">
+            <strong>UN: </strong>Un</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										12,99</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">12,99</span></td>
+      </tr>
+      <tr id="Item + 8">
+        <td valign="top">
+          <span class="txtTit">PIPOCA GUGUI PCT130G</span>
+          <span class="RCod">
+										(Código:
+										188867
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>1</span>
+          <span class="RUN">
+            <strong>UN: </strong>Un</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										2,89</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">2,89</span></td>
+      </tr>
+      <tr id="Item + 9">
+        <td valign="top">
+          <span class="txtTit">LARANJA PERA KG</span>
+          <span class="RCod">
+										(Código:
+										953
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>3,82</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										1,979058</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">7,56</span></td>
+      </tr>
+      <tr id="Item + 10">
+        <td valign="top">
+          <span class="txtTit">PANIF PAO FRAN KG</span>
+          <span class="RCod">
+										(Código:
+										315936
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>0,6</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										12,9</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">7,74</span></td>
+      </tr>
+      <tr id="Item + 11">
+        <td valign="top">
+          <span class="txtTit">BATATA MONALISA KG</span>
+          <span class="RCod">
+										(Código:
+										3210
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>1,79</span>
+          <span class="RUN">
+            <strong>UN: </strong>Kg</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										9,49162</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">16,99</span></td>
+      </tr>
+      <tr id="Item + 12">
+        <td valign="top">
+          <span class="txtTit">REQ POCOS CALDAS</span>
+          <span class="RCod">
+										(Código:
+										259915
+										)
+									</span>
+          <br>
+          <span class="Rqtd">
+            <strong>Qtde.:</strong>1</span>
+          <span class="RUN">
+            <strong>UN: </strong>Un</span>
+          <span class="RvlUnit">
+            <strong>Vl. Unit.:</strong>
+										&nbsp;
+										13,59</span>
+        </td>
+        <td align="right" valign="top" class="txtTit noWrap">
+									Vl. Total
+									<br><span class="valor">13,59</span></td>
+      </tr>
+    </tbody></table>
+    <div id="totalNota" class="txtRight">
+      <div id="linhaTotal">
+        <label>Qtd. total de itens:</label>
+        <span class="totalNumb">12</span>
+      </div>
+      <div id="linhaTotal" class="linhaShade">
+        <label>Valor a pagar R$:</label>
+        <span class="totalNumb txtMax">113,93</span>
+      </div>
+      <div id="linhaForma">
+        <label>Forma de pagamento:</label>
+        <span class="totalNumb txtTitR">Valor pago R$:</span>
+      </div>
+      <div id="linhaTotal">
+        <label class="tx">
+											Cartão de Crédito
+										</label>
+        <span class="totalNumb">113,93</span>
+      </div>
+      <div id="linhaTotal">
+        <label class="tx">Troco </label>
+        <span class="totalNumb">NaN</span>
+      </div>
+      <div id="linhaTotal" class="spcTop">
+        <label class="txtObs">Informação dos Tributos Totais Incidentes
+									(Lei Federal 12.741/2012)&nbsp;R$</label>
+        <span class="totalNumb txtObs">34,99</span>
+      </div>
+    </div>
+  </div>
+  <div id="infos" class="txtCenter">
+    <div data-role="collapsible" data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-collapsed="false" class="ui-collapsible ui-collapsible-inset ui-corner-all ui-collapsible-themed-content"><h4 class="ui-collapsible-heading"><a href="#" class="ui-collapsible-heading-toggle ui-btn ui-icon-carat-u ui-btn-icon-left ui-btn-inherit">Informações gerais da Nota<span class="ui-collapsible-heading-status"> click to collapse contents</span></a></h4><div class="ui-collapsible-content ui-body-inherit" aria-hidden="false">
+      
+      <ul data-role="listview" data-inset="false" class="ui-listview">
+        <li class="ui-li-static ui-body-inherit ui-first-child ui-last-child">
+          <strong>EMISSÃO NORMAL</strong>
+          <br>
+          <br>
+          <strong>Número: </strong>22783<strong> Série: </strong>6<strong> Emissão: </strong>26/05/2026 18:54:33
+								- Via Consumidor
+								<br><br><strong>Protocolo de Autorização: </strong>135263552097369       26/05/2026 18:54:36<br><br><strong>
+										Ambiente de Produção -
+									
+									Versão XML:
+									4.00
+									- Versão XSLT: 2.05
+								</strong></li>
+      </ul>
+    </div></div>
+    <div data-role="collapsible" data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-collapsed="false" class="ui-collapsible ui-collapsible-inset ui-corner-all ui-collapsible-themed-content"><h4 class="ui-collapsible-heading"><a href="#" class="ui-collapsible-heading-toggle ui-btn ui-icon-carat-u ui-btn-icon-left ui-btn-inherit">Chave de acesso<span class="ui-collapsible-heading-status"> click to collapse contents</span></a></h4><div class="ui-collapsible-content ui-body-inherit" aria-hidden="false">
+      
+      <ul data-role="listview" data-inset="false" class="ui-listview">
+        <li class="ui-li-static ui-body-inherit ui-first-child ui-last-child">
+								Consulte pela Chave de Acesso em
+								
+								https://www.nfce.fazenda.sp.gov.br/consulta<br><br><strong>Chave de acesso:</strong><br><span class="chave">3526 0576 4304 3800 9713 6500 6000 0227 8310 0618 8351</span></li>
+      </ul>
+    </div></div>
+    <div data-role="collapsible" data-collapsed-icon="carat-d" data-expanded-icon="carat-u" data-collapsed="false" class="ui-collapsible ui-collapsible-inset ui-corner-all ui-collapsible-themed-content"><h4 class="ui-collapsible-heading"><a href="#" class="ui-collapsible-heading-toggle ui-btn ui-icon-carat-u ui-btn-icon-left ui-btn-inherit">Consumidor<span class="ui-collapsible-heading-status"> click to collapse contents</span></a></h4><div class="ui-collapsible-content ui-body-inherit" aria-hidden="false">
+      
+      <ul data-role="listview" data-inset="false" class="ui-listview">
+        <li class="ui-li-static ui-body-inherit ui-first-child ui-last-child">
+          <strong>Consumidor não identificado</strong>
+        </li>
+      </ul>
+    </div></div>
+  </div>
+</div>
+            </div>
+        <div class="ui-loader ui-corner-all ui-body-a ui-loader-default"><span class="ui-icon-loading"></span><h1>loading</h1></div></div>
+        <div style="width: 100%; max-width: 510px; margin: 10px auto; background-color: white;">
+            <div>
+                <div style="width: 50%; float: left; text-align: left">
+                    
+<span class="timestampConsulta">Data/Hora: 03/06/2026 07:41</span>
+
+                </div>
+                <div style="width: 50%; float: right; text-align: right;">
+                    
+
+                </div>
+            </div>
+            <div id="Botoes" class="naoImprimir BotoesResponsivos" style="float: left; margin-top: 20px; margin-bottom: 80px; width: 100%;">
+                <div style="width: 39%; float: left;">
+                    <input type="button" name="btnImprimir" value="Imprimir DANFE NFC-e" onclick="window.print(); return true;__doPostBack('btnImprimir','')" id="btnImprimir" class="primario | imprimir">
+                </div>
+                <div style="width: 34%; float: left;">
+                    <input type="button" name="btnVisualizarAbas" value="Visualizar em Abas" onclick="javascript:__doPostBack('btnVisualizarAbas','')" id="btnVisualizarAbas" class="primario | visualizar">
+                </div>
+                <div style="width: 25%; float: left">
+                    <input type="button" name="btnNovaConsulta" value="Nova consulta" onclick="javascript:__doPostBack('btnNovaConsulta','')" id="btnNovaConsulta" class="primario | consultar">
+                </div>
+            </div>
+        </div>
+    
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="2CB5E186">
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="GfzrwdbQrx4pYQysP9LtbD9BBhqwrNtwuE1jo1qizBEZZkE4jIUN5WIUecqTl5JUeNJTOuU857QwnsqEnthtG8swlaNQnAVNLDZGs8AY5IaSeVHQpCRkYDFCLpg+zds5Id8uEE0I2xKz5JCiu31+UGpFXaZmK0HUKfSkRjlwe60=">
+</div></form>
+    <script type="text/javascript">
+      
+        function ExibirImagemCancelada() {
+            var objImg = document.getElementById('imgInvalido1');
+            if ($('#hdfNotaCancelada').length) {
+                AcertarDivErro(objImg);
+            }
+        }
+
+        function ExibirImagemDenegada() {
+            var objImg = document.getElementById('imgInvalido2');
+            if ($('#hdfNotaDenegada').length) {
+                AcertarDivErro(objImg);
+            }
+        }
+
+        function AjustarExibicaoEPEC()
+        {
+            if ($('#hdfSomenteEPEC').length) {
+                $('.ui-page').css({ "minHeight": "500px" });
+            }
+        }
+
+        function AcertarDivErro(objImg) {
+            $('#erro').css({ "display": "block" });
+            $('#erro').css({ "maxWidth": "510px" });
+            $('#erro').css({ "maxHeight": "200px" });
+            objImg.style.display = 'block';
+        }
+    </script>
+
+
+</body></html>
