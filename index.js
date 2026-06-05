@@ -43,20 +43,45 @@ app.post('/parse-nfe', async (req, res) => {
       const cnpjMatch = document.body.innerText.match(/\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}/)
       const cnpj = getText('#u21') || getText('#CNPJEmit') || (cnpjMatch ? cnpjMatch[0] : '')
 
-      // Endereço — busca somente em blocos de texto curtos (evita pegar nomes de itens)
-      // Prioriza seletores HTML diretos, só usa regex como último recurso
+      // Endereço — estratégia robusta para qualquer abreviatura de logradouro
       let endereco = getText('#u22') || getText('#EndEmit') || ''
       if (!endereco) {
-        // Percorre divs pequenas procurando padrão de endereço real (AV, RUA, etc)
-        const divs = Array.from(document.querySelectorAll('div, span, td'))
-        for (const el of divs) {
-          const txt = el.innerText?.trim() || ''
-          // Ignora textos muito longos (provavelmente bloco de itens) ou que contenham "Código:"
-          if (txt.length > 120 || txt.includes('Código:') || txt.includes('Qtde') || txt.includes('Vl.')) continue
-          if (/^(AVENIDA|AV\.?|RUA|R\.?\s+[A-Z]|ALAMEDA|TRAVESSA|ESTRADA|ROD\.|RODOVIA)/i.test(txt)) {
+        // Regex que aceita qualquer abreviatura comum de logradouro
+        // Exige que após a abreviatura venha letra maiúscula (nome de rua real, não código)
+        const enderecoRegex = /^(AVENIDA|AVENUE|AV\.?\s|RUA\s|R\.\s[A-Z]|ALAMEDA\s|TRAVESSA\s|ESTRADA\s|ROD\.\s|RODOVIA\s|PRAÇA\s|PC\.\s|LARGO\s|VIA\s|TV\.\s)/i
+
+        const elementos = Array.from(document.querySelectorAll('div, span, td, p'))
+        for (const el of elementos) {
+          // Pega só o texto direto do elemento, sem filhos (evita blocos grandes)
+          const txt = Array.from(el.childNodes)
+            .filter(n => n.nodeType === 3)
+            .map(n => n.textContent.trim())
+            .join(' ')
+            .trim() || el.innerText?.split('\n')[0]?.trim() || ''
+
+          // Ignora textos muito longos, com código de produto, ou dados de item
+          if (
+            txt.length < 5 ||
+            txt.length > 150 ||
+            txt.includes('Código:') ||
+            txt.includes('Qtde') ||
+            txt.includes('Vl.') ||
+            txt.includes('(Código') ||
+            /^[A-Z]{2,}\d+/.test(txt) // começa com sigla+número (código de item)
+          ) continue
+
+          if (enderecoRegex.test(txt)) {
             endereco = txt.split('\n')[0].trim()
             break
           }
+        }
+
+        // Fallback: busca no texto completo da página com regex mais ampla
+        if (!endereco) {
+          const endMatch = document.body.innerText.match(
+            /(AVENIDA|AV\.?\s+|RUA\s+|ALAMEDA\s+|TRAVESSA\s+|ESTRADA\s+|ROD\.\s+|RODOVIA\s+)[A-ZÁÉÍÓÚÀÂÊÎÔÛÃÕÇ][^\n,]{3,50}/i
+          )
+          if (endMatch) endereco = endMatch[0].trim()
         }
       }
 
@@ -64,7 +89,9 @@ app.post('/parse-nfe', async (req, res) => {
       let cidade = getText('.Cidade') || ''
       let estado = getText('.UF') || ''
       if (!cidade || !estado) {
-        const cidadeMatch = document.body.innerText.match(/,\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]{2,})\s*[,\/]\s*(SP|RJ|MG|RS|PR|SC|BA|GO|DF|CE|PE|AM|PA)\b/i)
+        const cidadeMatch = document.body.innerText.match(
+          /,\s*([A-ZÀ-Ú][A-ZÀ-Ú\s]{2,})\s*[,\/]\s*(SP|RJ|MG|RS|PR|SC|BA|GO|DF|CE|PE|AM|PA)\b/i
+        )
         if (cidadeMatch) {
           if (!cidade) cidade = cidadeMatch[1].trim()
           if (!estado) estado = cidadeMatch[2].trim()
