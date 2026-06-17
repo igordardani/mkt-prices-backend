@@ -179,6 +179,107 @@ app.post('/parse-nfe', async (req, res) => {
   }
 })
 
+// Endpoint para importação via PDF (NF-e sem QR Code)
+// Recebe o PDF em base64, usa Gemini Flash (gratuito) para extrair os dados
+// e retorna no mesmo formato que /parse-nfe
+app.post('/parse-nfe-pdf', async (req, res) => {
+  const { pdf_base64 } = req.body
+  if (!pdf_base64) return res.status(400).json({ error: 'PDF não informado' })
+
+  try {
+    const axios = require('axios')
+
+    const prompt = `Você é um extrator de dados de cupom fiscal eletrônico brasileiro (NF-e/NFC-e).
+Analise este PDF de cupom fiscal e extraia os dados no formato JSON abaixo.
+Responda SOMENTE com o JSON, sem texto adicional, sem markdown, sem explicações.
+
+Formato esperado:
+{
+  "mercado": "nome do estabelecimento",
+  "cnpj": "00.000.000/0000-00",
+  "endereco": "endereço completo",
+  "cidade": "nome da cidade",
+  "estado": "UF",
+  "numero": "número da NF",
+  "chave_acesso": "44 dígitos sem espaços",
+  "data_emissao": "DD/MM/YYYY HH:MM:SS",
+  "forma_pagamento": "forma de pagamento",
+  "total": 0.00,
+  "total_bruto": 0.00,
+  "desconto": 0.00,
+  "itens": [
+    {
+      "nome": "nome do produto",
+      "codigo": "código do produto",
+      "quantidade": 0.000,
+      "unidade": "UN ou KG etc",
+      "preco_unitario": 0.00,
+      "preco_total": 0.00
+    }
+  ]
+}
+
+Regras:
+- chave_acesso: remova todos os espaços, deve ter exatamente 44 dígitos
+- total: use o campo "Valor a pagar" se existir, senão "Valor total"
+- total_bruto: use o campo "Valor total R$" (antes do desconto)
+- desconto: use o campo "Descontos R$", se não houver use 0
+- data_emissao: formato DD/MM/YYYY HH:MM:SS
+- preco_unitario: valor unitário de cada item
+- quantidade: número com ponto como separador decimal
+- Se um campo não existir no cupom, use null para strings e 0 para números`
+
+    const apiKey = process.env.GEMINI_API_KEY
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        contents: [
+          {
+            parts: [
+              {
+                inline_data: {
+                  mime_type: 'application/pdf',
+                  data: pdf_base64
+                }
+              },
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0,       // zero = mais determinístico, ideal para extração de dados
+          maxOutputTokens: 4096
+        }
+      }
+    )
+
+    const rawText = response.data.candidates[0].content.parts
+      .map(p => p.text || '')
+      .join('')
+      .replace(/```json|```/g, '')
+      .trim()
+
+    const dados = JSON.parse(rawText)
+
+    // Garante que chave_acesso não tem espaços
+    if (dados.chave_acesso) {
+      dados.chave_acesso = dados.chave_acesso.replace(/\s/g, '')
+    }
+
+    console.log('Dados extraídos do PDF:', JSON.stringify(dados, null, 2))
+    res.json(dados)
+
+  } catch (error) {
+    console.error('Erro ao processar PDF:', error?.response?.data || error.message)
+    res.status(500).json({
+      error: 'Erro ao processar o PDF',
+      detalhes: error?.response?.data?.error?.message || error.message
+    })
+  }
+})
+
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`)
