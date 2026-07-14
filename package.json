@@ -20,4 +20,27 @@
     "puppeteer": "^25.1.0",
     "puppeteer-core": "^25.1.0"
   }
+}{
+  "name": "mkt-prices-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "postinstall": "npx puppeteer browsers install chrome",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@sparticuz/chromium": "^149.0.0",
+    "axios": "^1.17.0",
+    "cheerio": "^1.2.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "puppeteer": "^25.1.0",
+    "puppeteer-core": "^25.1.0"
+  }
 }
