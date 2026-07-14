@@ -16,9 +16,22 @@ app.post('/parse-nfe', async (req, res) => {
 
   let browser
   try {
+    // ── AJUSTE PARA RENDER FREE TIER (512MB RAM) ──────────────────────────
+    // '--disable-dev-shm-usage': evita crash quando /dev/shm é pequeno
+    //   demais (comum em containers com pouca memória).
+    // '--single-process' + '--no-zygote': reduz o número de processos do
+    //   Chromium (normalmente ele sobe vários), economizando RAM — trade-off
+    //   é um pouco menos de estabilidade em cenários de alta concorrência,
+    //   irrelevante aqui pois o app processa 1 nota por vez.
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--single-process',
+        '--no-zygote',
+      ]
     })
 
     const page = await browser.newPage()
@@ -279,6 +292,12 @@ Regras:
     })
   }
 })
+
+// ── Keep-alive interno (opcional, ver nota no CONTEXT/chat) ──────────────
+// Render free tier hiberna o serviço após 15min sem requisições. Isso NÃO
+// resolve isso sozinho — é só o servidor Express normal. Para evitar o
+// cold-start, configure um serviço externo de ping (ex: cron-job.org,
+// UptimeRobot) batendo em GET / a cada 10-14 minutos. Ver instruções no chat.
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
