@@ -30,15 +30,26 @@ app.post('/parse-nfe', async (req, res) => {
 
     const page = await browser.newPage()
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 })
 
-    // ── NOVO: espera ativa por um sinal DEFINITIVO ────────────────────────
+    // ── FIX: troca de 'networkidle2' → 'domcontentloaded' ─────────────────
+    // 'networkidle2' exige a rede "quieta" (≤2 conexões abertas) por 500ms
+    // seguidos — condição frágil nesse portal (qualquer polling/analytics em
+    // segundo plano nunca deixa a rede "descansar", estourando os 30s mesmo
+    // com o conteúdo relevante já carregado). 'domcontentloaded' dispara
+    // assim que o HTML inicial está pronto, e o waitForFunction logo abaixo
+    // já cobre a espera ativa pelo conteúdo dinâmico de verdade (erro da
+    // SEFAZ ou linhas de item no DOM) — muito mais robusto que depender de
+    // "rede parada" num ambiente com CPU limitada (Render free tier +
+    // --single-process --no-zygote).
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+
+    // ── Espera ativa por um sinal DEFINITIVO ───────────────────────────────
     // Em vez de confiar cegamente num setTimeout fixo (que corre o risco de
     // capturar a página num estado intermediário — dados pré-renderizados mas
     // ainda não validados pela SEFAZ), espera até 8s por QUALQUER um dos dois
     // sinais: (a) o modal de erro da SEFAZ apareceu, ou (b) linhas de item
     // reais já estão no DOM. Não trava a requisição se nenhum dos dois
-    // aparecer nesse tempo — só segue para o fallback de 3s que já existia.
+    // aparecer nesse tempo — só segue para o fallback de 1.5s que já existia.
     await page.waitForFunction(() => {
       const texto = document.body.innerText || ''
       const temErro = /assinatura do documento.*inconsistente|qr\s*code\s*inv[aá]lido|problemas na consulta/i.test(texto)
@@ -48,7 +59,7 @@ app.post('/parse-nfe', async (req, res) => {
 
     await new Promise(r => setTimeout(r, 1500))
 
-    // ── NOVO: detecta o modal de erro da SEFAZ ANTES de extrair dados ─────
+    // ── Detecta o modal de erro da SEFAZ ANTES de extrair dados ───────────
     // Se a própria SEFAZ está dizendo que o QR é inválido/assinatura não
     // confere, não tenta "adivinhar" nada via regex — recusa direto.
     const erroSefaz = await page.evaluate(() => {
@@ -261,22 +272,7 @@ Regras:
         ],
         generationConfig: {
           temperature: 0,
-          // ── AUMENTADO NOVAMENTE: 16384 → 32768 ────────────────────────
-          // 16384 ainda não foi suficiente para este cupom — a resposta
-          // continuou sendo cortada no meio do JSON. gemini-2.5-flash-lite
-          // suporta uma janela de saída bem maior, então subimos para 32768
-          // como margem generosa. Se AINDA assim truncar, os logs abaixo
-          // (finishReason + texto bruto) vão confirmar isso com certeza.
           maxOutputTokens: 32768,
-          // ── NOVO: força modo de saída JSON estruturada ───────────────────
-          // Resolve a segunda causa de erro ("Unterminated string in JSON"):
-          // sem este modo, o Gemini gera o JSON como texto livre e pode
-          // deixar de escapar corretamente aspas, quebras de linha ou outros
-          // caracteres especiais dentro de valores de string (ex: nome de
-          // produto com aspas ou acento incomum), quebrando a sintaxe. Com
-          // responseMimeType: "application/json", a API usa decodificação
-          // restrita para garantir que a saída seja sempre JSON sintaticamente
-          // válido — elimina essa classe inteira de erro de parsing.
           responseMimeType: 'application/json'
         }
       }
@@ -284,10 +280,6 @@ Regras:
 
     const candidate = response.data?.candidates?.[0]
 
-    // ── NOVO: detecta truncamento por limite de tokens ANTES do parse ─────
-    // Se ainda assim a resposta for cortada (finishReason === 'MAX_TOKENS'),
-    // dá pra saber exatamente o motivo em vez de um "Unexpected end of JSON
-    // input" genérico — e também loga o texto bruto pra facilitar debug.
     if (candidate?.finishReason === 'MAX_TOKENS') {
       console.error('Gemini cortou a resposta por limite de tokens (MAX_TOKENS).')
       return res.status(500).json({
@@ -314,10 +306,6 @@ Regras:
     try {
       dados = JSON.parse(rawText)
     } catch (parseError) {
-      // ── NOVO: loga o texto bruto que falhou no parse ───────────────────
-      // Sem isso, só sabíamos que o parse falhou — não o que veio da IA.
-      // Isso é essencial pra diagnosticar se foi truncamento, markdown
-      // residual, ou a IA "alucinando" texto fora do JSON.
       console.error('Falha ao fazer parse do JSON retornado pelo Gemini.')
       console.error('finishReason:', candidate?.finishReason)
       console.error('Texto bruto recebido (primeiros 2000 chars):', rawText.slice(0, 2000))
