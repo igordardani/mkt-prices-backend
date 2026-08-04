@@ -70,18 +70,28 @@ app.post('/parse-nfe', async (req, res) => {
     // ── Espera ativa por um sinal DEFINITIVO ───────────────────────────────
     // Em vez de confiar cegamente num setTimeout fixo (que corre o risco de
     // capturar a página num estado intermediário — dados pré-renderizados mas
-    // ainda não validados pela SEFAZ), espera até 8s por QUALQUER um dos dois
+    // ainda não validados pela SEFAZ), espera até 20s por QUALQUER um dos dois
     // sinais: (a) o modal de erro da SEFAZ apareceu, ou (b) linhas de item
-    // reais já estão no DOM. Não trava a requisição se nenhum dos dois
-    // aparecer nesse tempo — só segue para o fallback de 1.5s que já existia.
-    await page.waitForFunction(() => {
+    // reais já estão no DOM. Aumentado de 8s → 20s: o log de diagnóstico
+    // mostrou que o goto termina rápido (domcontentloaded), mas o conteúdo
+    // real (renderizado via JS no cliente) ainda não tinha aparecido nem
+    // após 8s+1.5s — resultando em extração inteiramente vazia.
+    const sinalEncontrado = await page.waitForFunction(() => {
       const texto = document.body.innerText || ''
       const temErro = /assinatura do documento.*inconsistente|qr\s*code\s*inv[aá]lido|problemas na consulta/i.test(texto)
       const temItens = !!document.querySelector('tr[id^="Item"]')
       return temErro || temItens
-    }, { timeout: 8000 }).catch(() => {})
+    }, { timeout: 20000 }).then(() => true).catch(() => false)
+
+    console.log(`[DIAG] sinal definitivo encontrado: ${sinalEncontrado}`)
 
     await new Promise(r => setTimeout(r, 1500))
+
+    // ── DIAGNÓSTICO: mostra o que a página realmente tinha no momento
+    // da extração, pra confirmar se o conteúdo chegou a carregar ─────────
+    const diagTexto = await page.evaluate(() => (document.body.innerText || '').slice(0, 500))
+    console.log(`[DIAG] tamanho do texto da página: ${diagTexto.length > 0 ? 'ver abaixo' : '0 (vazia)'}`)
+    console.log(`[DIAG] primeiros 500 chars da página:\n${diagTexto}`)
 
     // ── Detecta o modal de erro da SEFAZ ANTES de extrair dados ───────────
     // Se a própria SEFAZ está dizendo que o QR é inválido/assinatura não
