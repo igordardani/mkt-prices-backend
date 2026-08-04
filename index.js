@@ -16,6 +16,26 @@ app.post('/parse-nfe', async (req, res) => {
 
   let browser
   try {
+    // ── DIAGNÓSTICO TEMPORÁRIO ──────────────────────────────────────────
+    // Teste de conectividade "crua" (sem Puppeteer) ANTES de abrir o
+    // navegador. Se isso também travar/der timeout, o problema é a SEFAZ
+    // bloqueando o IP do Render (ou rede indisponível) — não o Puppeteer.
+    // Se isso funcionar mas o Puppeteer travar depois, o problema é o
+    // Chrome (provavelmente --single-process crashando com pouca RAM).
+    try {
+      const axios = require('axios')
+      const t0 = Date.now()
+      await axios.get(url, {
+        timeout: 15000,
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+      })
+      console.log(`[DIAG] axios conseguiu acessar a URL em ${Date.now() - t0}ms`)
+    } catch (diagErr) {
+      console.log(`[DIAG] axios FALHOU ao acessar a URL: ${diagErr.code || diagErr.message}`)
+    }
+
+    console.log('[DIAG] iniciando puppeteer.launch...')
+    const tLaunch = Date.now()
     // ── AJUSTE PARA RENDER FREE TIER (512MB RAM) ──────────────────────────
     browser = await puppeteer.launch({
       headless: true,
@@ -27,8 +47,10 @@ app.post('/parse-nfe', async (req, res) => {
         '--no-zygote',
       ]
     })
+    console.log(`[DIAG] puppeteer.launch concluído em ${Date.now() - tLaunch}ms`)
 
     const page = await browser.newPage()
+    console.log('[DIAG] newPage() concluído, indo para page.goto...')
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
 
     // ── FIX: troca de 'networkidle2' → 'domcontentloaded' ─────────────────
@@ -41,7 +63,9 @@ app.post('/parse-nfe', async (req, res) => {
     // SEFAZ ou linhas de item no DOM) — muito mais robusto que depender de
     // "rede parada" num ambiente com CPU limitada (Render free tier +
     // --single-process --no-zygote).
+    const tGoto = Date.now()
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
+    console.log(`[DIAG] page.goto concluído em ${Date.now() - tGoto}ms`)
 
     // ── Espera ativa por um sinal DEFINITIVO ───────────────────────────────
     // Em vez de confiar cegamente num setTimeout fixo (que corre o risco de
