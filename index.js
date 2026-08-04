@@ -10,32 +10,13 @@ app.get('/', (req, res) => {
   res.json({ status: 'mkt-prices backend rodando!' })
 })
 
-app.post('/parse-nfe', async (req, res) => {
-  const { url } = req.body
-  if (!url) return res.status(400).json({ error: 'URL não informada' })
-
+// ── Extração de uma única tentativa (sem retry aqui — a retentativa é
+// controlada pelo handler da rota, que decide quando vale a pena tentar
+// de novo e quando é melhor desistir na hora). Lança exceção em caso de
+// falha; o handler decide o que fazer com ela. ──────────────────────────
+async function tentarExtrairNfe(url) {
   let browser
   try {
-    // ── DIAGNÓSTICO TEMPORÁRIO ──────────────────────────────────────────
-    // Teste de conectividade "crua" (sem Puppeteer) ANTES de abrir o
-    // navegador. Se isso também travar/der timeout, o problema é a SEFAZ
-    // bloqueando o IP do Render (ou rede indisponível) — não o Puppeteer.
-    // Se isso funcionar mas o Puppeteer travar depois, o problema é o
-    // Chrome (provavelmente --single-process crashando com pouca RAM).
-    try {
-      const axios = require('axios')
-      const t0 = Date.now()
-      await axios.get(url, {
-        timeout: 15000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-      })
-      console.log(`[DIAG] axios conseguiu acessar a URL em ${Date.now() - t0}ms`)
-    } catch (diagErr) {
-      console.log(`[DIAG] axios FALHOU ao acessar a URL: ${diagErr.code || diagErr.message}`)
-    }
-
-    console.log('[DIAG] iniciando puppeteer.launch...')
-    const tLaunch = Date.now()
     // ── AJUSTE PARA RENDER FREE TIER (512MB RAM) ──────────────────────────
     browser = await puppeteer.launch({
       headless: true,
@@ -47,65 +28,39 @@ app.post('/parse-nfe', async (req, res) => {
         '--no-zygote',
       ]
     })
-    console.log(`[DIAG] puppeteer.launch concluído em ${Date.now() - tLaunch}ms`)
 
     const page = await browser.newPage()
-    console.log('[DIAG] newPage() concluído, indo para page.goto...')
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
 
-    // ── FIX: troca de 'networkidle2' → 'domcontentloaded' ─────────────────
-    // 'networkidle2' exige a rede "quieta" (≤2 conexões abertas) por 500ms
-    // seguidos — condição frágil nesse portal (qualquer polling/analytics em
-    // segundo plano nunca deixa a rede "descansar", estourando os 30s mesmo
-    // com o conteúdo relevante já carregado). 'domcontentloaded' dispara
-    // assim que o HTML inicial está pronto, e o waitForFunction logo abaixo
-    // já cobre a espera ativa pelo conteúdo dinâmico de verdade (erro da
-    // SEFAZ ou linhas de item no DOM) — muito mais robusto que depender de
-    // "rede parada" num ambiente com CPU limitada (Render free tier +
-    // --single-process --no-zygote).
-    const tGoto = Date.now()
+    // 'domcontentloaded' em vez de 'networkidle2': dispara assim que o HTML
+    // inicial está pronto, sem depender da rede "acalmar" (condição frágil
+    // nesse portal). O waitForFunction logo abaixo cobre a espera ativa
+    // pelo conteúdo dinâmico de verdade.
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-    console.log(`[DIAG] page.goto concluído em ${Date.now() - tGoto}ms`)
 
-    // ── Espera ativa por um sinal DEFINITIVO ───────────────────────────────
-    // Em vez de confiar cegamente num setTimeout fixo (que corre o risco de
-    // capturar a página num estado intermediário — dados pré-renderizados mas
-    // ainda não validados pela SEFAZ), espera até 20s por QUALQUER um dos dois
-    // sinais: (a) o modal de erro da SEFAZ apareceu, ou (b) linhas de item
-    // reais já estão no DOM. Aumentado de 8s → 20s: o log de diagnóstico
-    // mostrou que o goto termina rápido (domcontentloaded), mas o conteúdo
-    // real (renderizado via JS no cliente) ainda não tinha aparecido nem
-    // após 8s+1.5s — resultando em extração inteiramente vazia.
-    const sinalEncontrado = await page.waitForFunction(() => {
+    // Espera até 20s por um sinal DEFINITIVO: erro da SEFAZ no DOM ou linhas
+    // de item já renderizadas (o conteúdo real é montado via JS no cliente,
+    // então domcontentloaded sozinho não garante que já apareceu).
+    await page.waitForFunction(() => {
       const texto = document.body.innerText || ''
       const temErro = /assinatura do documento.*inconsistente|qr\s*code\s*inv[aá]lido|problemas na consulta/i.test(texto)
       const temItens = !!document.querySelector('tr[id^="Item"]')
       return temErro || temItens
-    }, { timeout: 20000 }).then(() => true).catch(() => false)
-
-    console.log(`[DIAG] sinal definitivo encontrado: ${sinalEncontrado}`)
+    }, { timeout: 20000 }).catch(() => {})
 
     await new Promise(r => setTimeout(r, 1500))
 
-    // ── DIAGNÓSTICO: mostra o que a página realmente tinha no momento
-    // da extração, pra confirmar se o conteúdo chegou a carregar ─────────
-    const diagTexto = await page.evaluate(() => (document.body.innerText || '').slice(0, 500))
-    console.log(`[DIAG] tamanho do texto da página: ${diagTexto.length > 0 ? 'ver abaixo' : '0 (vazia)'}`)
-    console.log(`[DIAG] primeiros 500 chars da página:\n${diagTexto}`)
-
     // ── Detecta o modal de erro da SEFAZ ANTES de extrair dados ───────────
     // Se a própria SEFAZ está dizendo que o QR é inválido/assinatura não
-    // confere, não tenta "adivinhar" nada via regex — recusa direto.
+    // confere, não tenta "adivinhar" nada via regex — recusa direto. Isso
+    // NÃO é motivo de retentativa: é uma resposta definitiva da SEFAZ.
     const erroSefaz = await page.evaluate(() => {
       const texto = document.body.innerText || ''
       return /assinatura do documento.*inconsistente|qr\s*code\s*inv[aá]lido|problemas na consulta/i.test(texto)
     })
 
     if (erroSefaz) {
-      return res.status(422).json({
-        error: 'A SEFAZ rejeitou este QR Code (erro de assinatura/digest inconsistente).',
-        sefaz_erro: true,
-      })
+      return { tipo: 'sefaz_rejeitou' }
     }
 
     const dados = await page.evaluate(() => {
@@ -234,15 +189,79 @@ app.post('/parse-nfe', async (req, res) => {
       return { mercado, cnpj, endereco, cidade, estado, numero, chave_acesso, data_emissao, total, total_bruto, desconto, forma_pagamento, itens }
     })
 
-    console.log('Dados extraídos:', JSON.stringify(dados, null, 2))
-    res.json(dados)
+    return { tipo: 'ok', dados }
 
-  } catch (error) {
-    console.error('Erro:', error.message)
-    res.status(500).json({ error: 'Erro ao buscar nota fiscal', detalhes: error.message })
   } finally {
     if (browser) await browser.close()
   }
+}
+
+// Erros que indicam instabilidade/indisponibilidade temporária da SEFAZ
+// (timeout de navegação, servidor não respondeu, etc.) — vale a pena
+// tentar de novo. Outros erros (ex: bug de programação) não são retentados,
+// pra não mascarar o problema real nem gastar tempo à toa.
+function pareceInstabilidadeTemporaria(error) {
+  const msg = (error?.message || '').toLowerCase()
+  return (
+    msg.includes('navigation timeout') ||
+    msg.includes('net::err') ||
+    msg.includes('timeout') ||
+    msg.includes('econnreset') ||
+    msg.includes('econnrefused')
+  )
+}
+
+const MAX_TENTATIVAS = 2
+const DELAY_ENTRE_TENTATIVAS_MS = 3000
+
+app.post('/parse-nfe', async (req, res) => {
+  const { url } = req.body
+  if (!url) return res.status(400).json({ error: 'URL não informada' })
+
+  let ultimoErro = null
+
+  for (let tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
+    try {
+      const resultado = await tentarExtrairNfe(url)
+
+      if (resultado.tipo === 'sefaz_rejeitou') {
+        // Resposta definitiva da SEFAZ (assinatura/QR inválido) — não é
+        // instabilidade, então não vale tentar de novo.
+        return res.status(422).json({
+          error: 'A SEFAZ rejeitou este QR Code (erro de assinatura/digest inconsistente).',
+          sefaz_erro: true,
+        })
+      }
+
+      console.log(`Dados extraídos (tentativa ${tentativa}):`, JSON.stringify(resultado.dados, null, 2))
+      return res.json(resultado.dados)
+
+    } catch (error) {
+      ultimoErro = error
+      console.error(`Tentativa ${tentativa}/${MAX_TENTATIVAS} falhou:`, error.message)
+
+      const vale_a_pena_tentar_de_novo = tentativa < MAX_TENTATIVAS && pareceInstabilidadeTemporaria(error)
+      if (vale_a_pena_tentar_de_novo) {
+        await new Promise(r => setTimeout(r, DELAY_ENTRE_TENTATIVAS_MS))
+        continue
+      }
+      break
+    }
+  }
+
+  // Todas as tentativas se esgotaram (ou o erro não parecia temporário).
+  if (pareceInstabilidadeTemporaria(ultimoErro)) {
+    return res.status(503).json({
+      error: 'O portal da SEFAZ parece estar instável ou fora do ar no momento.',
+      detalhes: 'Tentamos acessar o portal mais de uma vez e não conseguimos. Isso costuma ser temporário — tente novamente em alguns minutos.',
+      sefaz_instavel: true,
+    })
+  }
+
+  res.status(500).json({
+    error: 'Erro ao buscar nota fiscal',
+    detalhes: ultimoErro?.message || 'erro desconhecido',
+  })
 })
 
 app.post('/parse-nfe-pdf', async (req, res) => {
